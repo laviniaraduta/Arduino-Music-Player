@@ -50,7 +50,7 @@ volatile bool shuffle_press = false;
 
 ///////////////////////////////////////////// BUTTON INTERUPTS ////////////////////////////////////////////
 // next button - PD3 - INT1
-ISR(INT1_vect) {
+ISR(INT0_vect) {
   next_press = true;
 }
 
@@ -79,15 +79,15 @@ void interrupts_setup() {
   cli();
 
   // input pins
-  DDRD &= ~(1 << PD5) & ~(1 << PD4) & ~(1 << PD6) & ~(1 << PD7) & ~(1 << PD3);
+  DDRD &= ~(1 << PD5) & ~(1 << PD4) & ~(1 << PD6) & ~(1 << PD7) & ~(1 << PD2);
   DDRB &= ~(1 << PB0);
 
   // input pullup
-  PORTD |= (1 << PD4) | (1 << PD5) | (1 << PD6) | (1 << PD7) | (1 << PD3);
+  PORTD |= (1 << PD4) | (1 << PD5) | (1 << PD6) | (1 << PD7) | (1 << PD2);
   PORTB |= (1 << PB0);
 
   // external INTERRUPT
-  EIMSK |=  (1 << INT1);
+  EIMSK |=  (1 << INT0);
 
   // Interrupt constrol register
   PCICR |= (1 << PCIE2) | (1 << PCIE0);
@@ -96,8 +96,8 @@ void interrupts_setup() {
   PCMSK2 |= (1 << PCINT20) | (1 << PCINT21) | (1 << PCINT22) | (1 << PCINT23);
   PCMSK0 |= (1 << PCINT0);
 
-  // falling edge of INT1
-  EICRA |= (1 << ISC11);
+  // falling edge of INT0
+  EICRA |= (1 << ISC01);
 
   sei();
 }
@@ -201,7 +201,7 @@ void setup() {
   lcd.clear();
   lcd.backlight();
   Serial.begin(9600);
-  pinMode(2, OUTPUT);
+  pinMode(3, OUTPUT);
 
   // create custom chars
   lcd.createChar(SHUFFLE_C, shuffle_char);
@@ -249,12 +249,12 @@ void loop() {
       start_time = millis();
       paused_time = 0;
     } else if (!paused) {
-      int valoareAnalogica = analogRead(A1);  // Citește valoarea analogică de la pinul A1
-      int intensitate = map(valoareAnalogica, 0, 1023, 0, 255);  // Mapează valoarea citită în intervalul 0-255
-      if (valoareAnalogica > 550) {
-        analogWrite(2, intensitate);
+      int analogValue = analogRead(A1);  // read value from A1
+      int intensity = map(analogValue, 0, 1023, 0, 255);  // map value between 0 and 255
+      if (analogValue > 700) {
+        analogWrite(3, intensity);
       } else {
-        analogWrite(2, 0);  // Oprire completă a LED-ului pentru valori mai mici de 500
+        analogWrite(3, 0);  // turn off LED when analogValue under threshold
       }
 
       unsigned long curr_time = millis();
